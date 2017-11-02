@@ -11,16 +11,16 @@ class ModelUtils(object):
         result['key'] = self.key.id()
         return result
 
-class Sample(ModelUtils, ndb.Model):
+class user_classification(ModelUtils, ndb.Model):
 
-    userid = ndb.StringProperty()
-    created = ndb.DateTimeProperty(auto_now_add=True)
+    user_id = ndb.StringProperty()
+    insert_time = ndb.DateTimeProperty(auto_now_add=True)
 
     namespace = 'watanabe'
 
     @classmethod
     def query_expire(cls):
-        return cls.query(cls.created < datetime.now() - timedelta(minutes=3), namespace=Sample.namespace)
+        return cls.query(cls.insert_time < datetime.now() - timedelta(minutes=3), namespace=user_classification.namespace)
 
 
 class MainPage(webapp2.RequestHandler):
@@ -29,7 +29,7 @@ class MainPage(webapp2.RequestHandler):
         self.response.write('app now running!')
 
 def dump_support_default(o):
-    if isinstance(o, Sample):
+    if isinstance(o, user_classification):
         return o.to_dict()
 
     if isinstance(o, datetime):
@@ -37,15 +37,15 @@ def dump_support_default(o):
     raise TypeError(repr(o) + " is not JSON serializable")
 
 class ShowDataStoreRecords(webapp2.RequestHandler):
-    sample = Sample()
+    classification = user_classification()
 
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.write(dumps(self.sample.query(namespace=Sample.namespace).fetch(), default=dump_support_default))
+        self.response.write(dumps(self.classification.query(namespace=user_classification.namespace).fetch(), default=dump_support_default))
 
 class DeleteExpireRecords(webapp2.RequestHandler):
 
-    sample = Sample()
+    classification = user_classification()
 
     def get(self):
         count = self.delete_expired_keys()
@@ -56,7 +56,7 @@ class DeleteExpireRecords(webapp2.RequestHandler):
             self.response.write('no expire records.')
 
     def delete_expired_keys(self):
-        query = self.sample.query_expire()
+        query = self.classification.query_expire()
 
         delete_keys = []
 
