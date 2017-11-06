@@ -5,13 +5,7 @@
  * @param {!Function} The callback function.
  */
 
-//const config = require('./config');
-const config = {
-  DATASTORE_NAMESPACE: 'watanabe',
-  DATASTORE_KIND: 'user_classification',
-  KEYWORD_RULE: {'APP_VERSION_1.2': {'version': /1\.2/}, 'APP_VERSION_1.3': {'version': /1\.3/}}
-}
-
+const config = require('./config');
 const Datastore = require('@google-cloud/datastore');
 const datastore = Datastore({namespace:config.DATASTORE_NAMESPACE});
 
@@ -76,6 +70,10 @@ exports.subscribe = function subscribe(event, callback) {
             {
               name: 'insert_time',
               value: new Date()
+            },
+            {
+              name: 'from_streaming',
+              value: true
             }
           ]
         };

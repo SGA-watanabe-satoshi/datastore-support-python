@@ -15,13 +15,18 @@ class user_classification(ModelUtils, ndb.Model):
 
     user_id = ndb.StringProperty()
     insert_time = ndb.DateTimeProperty(auto_now_add=True)
+    from_streaming = ndb.BooleanProperty()
 
     namespace = 'watanabe'
 
     @classmethod
     def query_expire(cls):
+        """
+        indsert_timeとfrom_streamingで複合インデックスをはることができていれば下記を使う
+        現状だと、streamingデータとbatchデータが混在する環境だと大量のデータ転送が発生してしまい無駄が多い
+        """
+#       return cls.query(ndb.AND(cls.insert_time < datetime.now() - timedelta(minutes=3), cls.from_streaming == True), namespace=user_classification.namespace)
         return cls.query(cls.insert_time < datetime.now() - timedelta(minutes=3), namespace=user_classification.namespace)
-
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
@@ -56,12 +61,18 @@ class DeleteExpireRecords(webapp2.RequestHandler):
             self.response.write('no expire records.')
 
     def delete_expired_keys(self):
-        query = self.classification.query_expire()
+        rows = self.classification.query_expire()
 
         delete_keys = []
 
-        for key in query.iter(keys_only=True):
-            delete_keys.append(key)
+        """
+        indsert_timeとfrom_streamingで複合インデックスをはることができていれば下記を使う
+        """
+#       for row in rows.iter(keys_only=True):
+#           delete_keys.append(row)
+        for row in rows.iter():
+            if row.from_streaming == True:
+                delete_keys.append(row.key)
 
         key_count = len(delete_keys)
 
