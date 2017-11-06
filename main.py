@@ -67,6 +67,7 @@ class DeleteExpireRecords(webapp2.RequestHandler):
 
         """
         indsert_timeとfrom_streamingで複合インデックスをはることができていれば下記を使う
+        現状だと、大量のデータ転送が発生してしまい無駄が多い
         """
 #       for row in rows.iter(keys_only=True):
 #           delete_keys.append(row)
