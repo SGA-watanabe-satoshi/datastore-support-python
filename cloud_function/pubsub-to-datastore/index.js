@@ -61,7 +61,7 @@ exports.subscribe = function subscribe(event, callback) {
           data: [
             {
               name: 'classes',
-              value: JSON.stringify(keywords)
+              value: keywords
             },
             {
               name: 'user_id',
