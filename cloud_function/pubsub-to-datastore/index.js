@@ -5,13 +5,30 @@
  * @param {!Function} The callback function.
  */
 
-const config = require('./config');
+//const config = require('./config');
+const config = {
+  DATASTORE_NAMESPACE: 'csx',
+  DATASTORE_KIND: 'user_classification',
+  KEYWORD_RULE: {'USER_CLASS1': {'d': {'software': /^VTVS-CSX-STEF-DEMO$/, 'serviceInfo': {'adId': /.+/}, 'actionTypeId': /^1$/, 'contents': [{'typeId': /^1002$/}]}}}
+}
+
 const Datastore = require('@google-cloud/datastore');
 const datastore = Datastore({namespace:config.DATASTORE_NAMESPACE});
 
 function testObject(actual, expect){
   if(expect instanceof RegExp){
     return expect.test(actual);
+  }else if(Array.isArray(expect)){
+    return expect.reduce(function(prev, exp){
+      if(!prev)
+        return false;
+      for(var i in actual){
+        if(testObject(actual[i], exp)){
+          return true;
+        }
+      }
+      return false;
+    }, true);
   }else{
     for(var prop in expect){
       if(expect[prop] instanceof RegExp){
@@ -54,7 +71,9 @@ exports.subscribe = function subscribe(event, callback) {
 
     const keywords = actionToKeyword(action, expected);
 
-    if(keywords.length && action.userid){
+    if(keywords.length && action.d.serviceInfo.adId){
+	  console.log(JSON.stringify(action));
+      
       const key = datastore.key(config.DATASTORE_KIND);
       const entity = {
           key: key,
@@ -65,7 +84,7 @@ exports.subscribe = function subscribe(event, callback) {
             },
             {
               name: 'user_id',
-              value: action.userid
+              value: action.d.serviceInfo.adId
             },
             {
               name: 'insert_time',
